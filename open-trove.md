@@ -82,7 +82,7 @@ function openTrove(
 # Description
 
 - `owner`: Address that will own the new Trove.
-- `ownerIndex`: Index for the owner's Trove (v2 supports multiple Troves per address).
+- `ownerIndex`: Index for the owner's Trove, each trove is represented as an NFT. So if an owner has 2 troves already, and if you call the function `balanceOf(owner)` in the TroveNFT contract https://sepolia.etherscan.io/address/0xe9b841c5d2a6a1cc927ee081f1e3bd976416f387#code and returns 2, you'd use `ownerIndex = 2` to open their 3rd trove.
 - `ETHAmount`: Amount of ETH/collateral to deposit.
 - `boldAmount`: Amount of BOLD to borrow.
 - `upperHint`: Address hint for efficient insertion in sorted list (gas optimization) - address of Trove with higher collateral ratio than yours.
