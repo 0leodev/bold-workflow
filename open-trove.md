@@ -87,12 +87,14 @@ function openTrove(
 - `boldAmount`: Amount of BOLD to borrow.
 - `upperHint`: Address hint for efficient insertion in sorted list (gas optimization) - address of Trove with higher collateral ratio than yours.
 - `lowerHint`: Address hint for efficient insertion in sorted list (gas optimization) - address of Trove with lower collateral ratio than yours.
-- `annualInterestRate`: Annual interest rate for the loan (user-set in v2).
+- `annualInterestRate`: Annual interest rate for the loan (user-set in v2). 
 - `maxUpfrontFee`: Maximum upfront fee willing to pay.
-- `addManager`: Address to grant management permissions (can be zero address).
-- `removeManager`: Address to remove management permissions (can be zero address).
-- `_receiver`: Address to receive the borrowed BOLD tokens.
+- `addManager`: Address granted permissions for operations that add money to the trove (add collateral, pay debt).
+- `removeManager`: Address granted permissions for operations that withdraw money from the trove (withdraw collateral, borrow).
+- `receiver`: Address to receive the borrowed BOLD tokens, (If no receiver is set, funds go to the `owner`).
 
 The `uint256` returned by `openTrove()` is the Trove ID.
 
-The `address _owner` always retains full control and can withdraw. Setting `managers` only grants additional permissions to others.
+The `owner` always retains full control and can withdraw. Setting managers with `addManager` and `removeManager` only grants additional permissions to others.
+
+Only the `owner` or designated `removeManager` can perform **withdrawal operations**.
