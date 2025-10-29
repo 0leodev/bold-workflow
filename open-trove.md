@@ -1,83 +1,80 @@
-# borrowerOperations.sol
+# Interface
 
-0x2377…596c (ETH branch)
+### IZapper.sol
 
-# `openTrove()` interface
+Path `contracts/src/Zappers/Interfaces/IZapper.sol`
 
-Path `contracts/src/Interfaces/IBorrowerOperations.sol`
+GitHub https://github.com/liquity/bold/blob/main/contracts/src/Zappers/Interfaces/IZapper.sol
 
-Etherscan https://sepolia.etherscan.io/address/0x2377b5a07bdfa02812203bab749e7bd43e4c596c#code#F3#L19
-
-GitHub https://github.com/liquity/bold/blob/main/contracts/src/Interfaces/IBorrowerOperations.sol
+VSCODE https://vscode.blockscan.com/sepolia/0x7e4a8e4691585c17341c31986cafcf86f0d1ded3
 
 ```solidity
-function openTrove(
-        address _owner,
-        uint256 _ownerIndex,
-        uint256 _ETHAmount,
-        uint256 _boldAmount,
-        uint256 _upperHint,
-        uint256 _lowerHint,
-        uint256 _annualInterestRate,
-        uint256 _maxUpfrontFee,
-        address _addManager,
-        address _removeManager,
-        address _receiver
-    ) external returns (uint256);
+// SPDX-License-Identifier: MIT
+
+pragma solidity ^0.8.0;
+
+import "./IFlashLoanProvider.sol";
+import "./IExchange.sol";
+
+interface IZapper {
+    struct OpenTroveParams {
+        address owner;
+        uint256 ownerIndex;
+        uint256 collAmount;
+        uint256 boldAmount;
+        uint256 upperHint;
+        uint256 lowerHint;
+        uint256 annualInterestRate;
+        address batchManager;
+        uint256 maxUpfrontFee;
+        address addManager;
+        address removeManager;
+        address receiver;
+    }
+
+    struct CloseTroveParams {
+        uint256 troveId;
+        uint256 flashLoanAmount;
+        uint256 minExpectedCollateral;
+        address receiver;
+    }
+
+    function flashLoanProvider() external view returns (IFlashLoanProvider);
+
+    function exchange() external view returns (IExchange);
+
+    function openTroveWithRawETH(OpenTroveParams calldata _params) external payable returns (uint256);
+
+    function closeTroveFromCollateral(uint256 _troveId, uint256 _flashLoanAmount, uint256 _minExpectedCollateral)
+        external;
+}
+
 ```
 
 ---
 
-# `openTrove()` implementation
+# Implementation
 
-Path `contracts/src/BorrowerOperations.sol`
+### WETHZapper.sol
 
-Etherscan https://sepolia.etherscan.io/address/0x2377b5a07bdfa02812203bab749e7bd43e4c596c#code#F1#L1
+### Method: openTroveWithRawETH (0xf926c2d2)
 
-GitHub https://github.com/liquity/bold/blob/main/contracts/src/BorrowerOperations.sol
+Etherscan https://sepolia.etherscan.io/address/0x7e4a8e4691585c17341c31986cafcf86f0d1ded3#code
+
+GitHub https://github.com/liquity/bold/blob/main/contracts/src/Zappers/WETHZapper.sol
+
+VSCODE https://vscode.blockscan.com/sepolia/0x7e4a8e4691585c17341c31986cafcf86f0d1ded3
 
 ```solidity
-function openTrove(
-    address _owner,
-    uint256 _ownerIndex,
-    uint256 _collAmount,
-    uint256 _boldAmount,
-    uint256 _upperHint,
-    uint256 _lowerHint,
-    uint256 _annualInterestRate,
-    uint256 _maxUpfrontFee,
-    address _addManager,
-    address _removeManager,
-    address _receiver
-) external override returns (uint256) {
-    _requireValidAnnualInterestRate(_annualInterestRate);
-
-    OpenTroveVars memory vars;
-
-    vars.troveId = _openTrove(
-        _owner,
-        _ownerIndex,
-        _collAmount,
-        _boldAmount,
-        _annualInterestRate,
-        address(0),
-        0,
-        0,
-        _maxUpfrontFee,
-        _addManager,
-        _removeManager,
-        _receiver,
-        vars.change
-    );
-
-    // Set the stored Trove properties and mint the NFT
-    troveManager.onOpenTrove(_owner, vars.troveId, vars.change, _annualInterestRate);
-
-    sortedTroves.insert(vars.troveId, _annualInterestRate, _upperHint, _lowerHint);
-
-    return vars.troveId;
-}
+    function openTroveWithRawETH(OpenTroveParams calldata _params) external payable returns (uint256) {
+        require(msg.value > ETH_GAS_COMPENSATION, "WZ: Insufficient ETH");
+        require(
+            _params.batchManager == address(0) || _params.annualInterestRate == 0,
+            "WZ: Cannot choose interest if joining a batch"
+        );
 ```
+
+---
 
 # Description
 
